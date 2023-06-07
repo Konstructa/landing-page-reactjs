@@ -1,24 +1,32 @@
-import { useEffect, useState } from 'react';
-//import { Heading } from '../../components/Heading';
-import { Base } from '../Base';
-import { mockBase } from '../Base/mock';
-//import * as Styled from './styles';
+import { useEffect, useRef, useState } from 'react';
 import { mapData } from '../../api/map-data';
+import { mockBase } from '../Base/mock';
+import { Base } from '../Base';
 
 function Home() {
   const [data, setData] = useState([]);
+  const isMounted = useRef(true);
 
   useEffect(() => {
     const load = async () => {
+      console.log('fetching');
       const data = await fetch(
-        'http://localhost:1337/pages/?slug=landing-page',
+        'http://localhost:1337/api/pages/?populate=deep',
       );
       const json = await data.json();
-      const pageData = mapData(json);
-      setData(pageData[0]);
+
+      const { attributes } = json.data[0];
+      const pageData = mapData([attributes]);
+      setData(() => pageData[0]);
     };
 
-    load();
+    if (isMounted.current === true) {
+      load();
+    }
+
+    return () => {
+      isMounted.current = false;
+    };
   }, []);
 
   if (data === undefined) {
